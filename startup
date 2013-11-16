@@ -1,0 +1,292 @@
+--This is an install script for CompuNet
+local version = 2;
+
+local publicKey = "THIS SHOULD BE A PUBLIC KEY";
+
+--Load the public key from install disk
+if fs.exists("disk/compunet.publickey") then
+	local fileHandle = fs.open("disk/compunet.publickey", "r");
+	if not fileHandle then
+		return;
+	end
+
+	publicKey = fileHandle:readLine();
+	fileHandle:close();
+end
+
+local manifest = {
+	Core = {
+		{ Path = "compunet_core.lua",		Comment = "Core Operating System", Rename = "compunet_core", BootExclude = true, Unsigned = false },
+		{ Path = "compunet_networking.lua",	Comment = "Basic networking functions", Rename = "compunet_networking", Unsigned = false },
+		--{ Path = "compunet_dns_client.lua",	Comment = "DNS client" },
+		--{ Path = "compunet_users.lua",		Comment = "Login/user management" },
+		--{ Path = "compunet_fs_client.lua",	Comment = "Distributed versioning filesystem" },
+		--{ Path = "compunet_servicebus.lua",	Comment = "Service publishing and discovery" },
+		{ Path = "compunet.publickey",		Comment = "OS Security Verification Key", BootExclude = true, Unsigned = true }
+	},
+
+	User = {
+		--{ Path = "compunet_mail.lua", 	Comment = "Electronic Mail" },
+		--{ Path = "compunet_chat.lua", 	Comment = "Live Chat" },
+		--{ Path = "compunet_forum.lua", 	Comment = "Electronic Message Board" },
+		{ Path = "startup_user.lua",	Comment = "Bootscript for user terminal",	Rename = "startup", BootExclude = true },
+	},
+
+	NetworkServer = {
+		--"compunet_switch.lua",			--Network packet switch
+		--"compunet_servicebus_server.lua",	--Service publishing/discovery backbone server
+		--"compunet_dns_server.lua",		--DNS server
+		--"compunet_fs_server.lua",			--Distributed versioning filesystem server
+		--{ Path = "compunet_mail_server.lua",	Comment = "Electronic Mail Server" },
+		{ Path = "startup_server.lua",			Comment = "Bootscript for server",	Rename = "startup", BootExclude = true },
+	}
+};
+
+--Sets the text color (if this monitor supports it)
+local currentTerminalColor = colors.lightGray;
+function SetTextColor(color)
+	if term.isColor() then
+		term.setTextColor(color);
+	end
+	currentTerminalColor = color;
+end
+
+--Generates a digital signature
+function GenerateSignature(payload, pubKey)
+	return "1234";
+end
+
+--Verifies a digital signature
+function VerifyPayloadSignature(signedPayloadPacket, pubKey)
+	local payload = signedPayloadPacket["payload"];
+	local signature = signedPayloadPacket["signature"];
+
+	return GenerateSignature(payload, pubKey) == signature;
+end
+
+--Checks if this computer already has compunet installed and what version it is
+--returns 0 for no install, otherwise returns a version number
+function CompunetTerminalVersion()
+	if not fs.exists("__compunet.version") then
+		return 0;
+	end
+
+	local fileHandle = fs.open("__compunet.version", "r");
+	if not fileHandle then
+		return 0;
+	end
+
+	local versionText = fileHandle:readLine();
+	fileHandle:close();
+
+	local signedVersionTable = textutils.unserialize(versionText);
+
+	if not VerifyPayloadSignature(signedVersionTable, publicKey) then
+		if advancedInstaller then
+			SetTextColor(colors.purple);
+			print("Installed Version Failed Signature Check!");
+			SetTextColor(colors.lightGray);
+		else
+			print("Installed Version Is Corrupt!");
+		end
+
+		return 0;
+	else
+		return tonumber(signedVersionTable["payload"]);
+	end
+end
+
+--Generic user input function, sets up the terminal for input and then restores it to normality after
+function UserInput(func)
+	print("");
+	local saveColor = currentTerminalColor;
+	SetTextColor(colors.cyan);
+	local r = func();
+	SetTextColor(saveColor);
+	return r;
+end
+
+--Reads a boolean from the user
+function UserInputBoolean(message)
+	return UserInput(function()
+		print(message .. " (y/n)");
+		return read() == "y";
+	end);
+end
+
+function UserInputString(message)
+	return UserInput(function()
+		print(message);
+		return read();
+	end);
+end
+
+local advancedInstaller = false;
+
+--Run the startup file on the computer
+function StartComputer()
+	print("Installation Complete, rebooting computer in 2 seconds...");
+	os.sleep(2);
+
+	if fs.exists("startup") then
+		term.clear();
+		term.setCursorPos(1, 1);
+		shell.run("startup");
+	else
+		SetTextColor(colors.red);
+		print("Cannot Find A Startup File On This Computer!");
+	end
+end
+
+function GetInstallationOptions()
+	if not fs.exists("__compunet.options") then
+		return;
+	end
+
+	local fileHandle = fs.open("__compunet.options", "r");
+	if not fileHandle then
+		return;
+	end
+
+	local optionsText = fileHandle:readLine();
+	fileHandle:close();
+
+	return textutils.unserialize(optionsText);
+end
+
+function UserInputOptions()
+	local options = { Core = true };
+
+	if not advancedInstaller then
+		options.User = true;
+	else
+		SetTextColor(colors.purple);
+		for name,_ in pairs(manifest) do
+			options[name] = UserInputBoolean("Install Component " .. name .. "?");
+		end
+		SetTextColor(colors.lightGray);
+	end
+
+	return options;
+end
+
+function Install(options)
+	if fs.exists("__compunet.options") then
+		fs.delete("__compunet.options");
+	end
+	local optionsHandle = fs.open("__compunet.options", "w");
+	local optionsString = textutils.serialize(options)
+	optionsHandle.writeLine(optionsString);
+	optionsHandle.close();
+
+	if fs.exists("__compunet.bootmanifest") then
+		fs.delete("__compunet.bootmanifest");
+	end
+
+	local bootmanifest = fs.open("__compunet.bootmanifest", "w");
+
+	--Copy files
+	for partname,part in pairs(manifest) do
+		if options[partname] then
+			print("Installing Module " .. partname);
+			for _,file in pairs(part) do
+				print(" - " .. file.Comment or file.Path);
+
+				local destination = file.Rename or file.Path;
+				if fs.exists(destination) then
+					fs.delete(destination);
+				end
+				fs.copy("disk/" .. file.Path, destination);
+
+				if not file.Unsigned then
+					print(" -- Verification Signature");
+					local sigDest = destination .. ".signature";
+					if fs.exists(sigDest) then
+						fs.delete(sigDest);
+					end
+					fs.copy("disk/" .. file.Path .. ".signature", sigDest);
+				end
+
+				if not file.BootExclude then
+					bootmanifest.writeLine(destination);
+				end
+			end
+		end
+	end
+
+	bootmanifest.close();
+end
+
+function InteractiveInstall()
+	--Verify installer is intact
+	for _,o in pairs(manifest) do
+		print(o);
+		for _,n in pairs(o) do
+			print(n);
+			if	not fs.exists("disk/" .. n.Path)
+				or (not n.Unsigned and not fs.exists("disk/" .. n.Path .. ".signature"))
+				then
+				SetTextColor(colors.red);
+				print("Installer Is Damaged! File \"" .. n.Path .. "\" or is not signed");
+				StartComputer();
+				return;
+			end
+		end
+	end
+
+	--Basic intro + mode selection
+	term.clear();
+	term.setCursorPos(1, 1);
+	SetTextColor(colors.lightGray);
+	print("CompuNet Installer v" .. version);
+	print("---------------------------------------------------");
+	print("This installer will guide you through the install or upgrade process of your compunet terminal");
+	if UserInputBoolean("Do you want to use advanced mode?") then
+		advancedInstaller = true;
+		SetTextColor(colors.purple);
+		print("Advanced Installer Mode");
+		SetTextColor(colors.lightGray);
+	else
+		print("Basic Installer Mode");
+	end
+	print("");
+
+	--Advanced mode security paranoia
+	if advancedInstaller then
+		print("Public key is:");
+		print(publicKey);
+		if UserInputBoolean("Do you want to enter a different public key for install verification?") then
+			SetTextColor(colors.purple);
+			publicKey = UserInputString("Enter Public Key:");
+		end
+	end
+	SetTextColor(colors.lightGray);
+	print("");
+
+	--Checking for existing install (upgrade or clear install)
+	SetTextColor(colors.yellow);
+	print("Checking for existing install...");
+	local terminalVersion = CompunetTerminalVersion();
+	SetTextColor(colors.lightGray);
+
+	--Upgrade or clean install?
+	if terminalVersion == 0 then
+		print("Beginning Clean Install of v" .. version);
+		Install(UserInputOptions());
+	else
+		print("Existing Install: ComputNet v" .. terminalVersion);
+		if terminalVersion > version then
+			print("Installed Version Is Newer Than Installer, Exiting...");
+			return;
+		else
+			local options = (UserInputBoolean("Do you want to use installation options from previous install?") and GetInstallationOptions()) or UserInputOptions();
+
+			print("Upgrading from v" .. terminalVersion .. " to v" .. version);
+			Install(options);
+		end
+	end
+
+	StartComputer();
+end
+
+InteractiveInstall();
