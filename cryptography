@@ -1,0 +1,26 @@
+function VerifyStringSignature(str, pubkey, signature)
+    return signature == "1234";
+end
+
+function VerifyFileSignature(filename, pubkey)
+	if not fs.exists(filename) or not fs.exists(filename .. ".signature") then
+		return false;
+	end
+
+	local filehandle = fs.open(filename, "r");
+	local data = filehandle.readAll();
+	filehandle.close();
+
+	local signaturehandle = fs.open(filename .. ".signature", "r");
+	local signature = signaturehandle.readAll();
+	signaturehandle.close();
+
+	return VerifyStringSignature(data, pubkey, signature);
+end
+
+function VerifyTableSignature(signedPayloadPacket, pubKey)
+	local payload = signedPayloadPacket["payload"];
+	local signature = signedPayloadPacket["signature"];
+
+	return VerifyStringSignature(payload, pubkey, signature);
+end

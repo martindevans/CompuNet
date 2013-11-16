@@ -16,13 +16,20 @@ end
 
 local manifest = {
 	Core = {
-		{ Path = "compunet_core.lua",		Comment = "Core Operating System", Rename = "compunet_core", BootExclude = true, Unsigned = false },
+        --Libraries/resources
+		{ Path = "compunet.publickey",		Comment = "OS Security Verification Key", BootExclude = true, Unsigned = true },
+        { Path = "cryptography",            Comment = "Cryptography Functions", BootExclude = true, Unsigned = true },
+    
+        --OS Core
+        { Path = "scheduler.lua",           Comment = "Process Scheduler", BootExclude = false, Unsigned = false },
+        { Path = "compunet_core.lua",		Comment = "Core Operating System", Rename = "compunet_core", BootExclude = true, Unsigned = false },
+        
+        --OS applications/device drivers
 		{ Path = "compunet_networking.lua",	Comment = "Basic networking functions", Rename = "compunet_networking", Unsigned = false },
 		--{ Path = "compunet_dns_client.lua",	Comment = "DNS client" },
 		--{ Path = "compunet_users.lua",		Comment = "Login/user management" },
 		--{ Path = "compunet_fs_client.lua",	Comment = "Distributed versioning filesystem" },
 		--{ Path = "compunet_servicebus.lua",	Comment = "Service publishing and discovery" },
-		{ Path = "compunet.publickey",		Comment = "OS Security Verification Key", BootExclude = true, Unsigned = true }
 	},
 
 	User = {
@@ -51,18 +58,7 @@ function SetTextColor(color)
 	currentTerminalColor = color;
 end
 
---Generates a digital signature
-function GenerateSignature(payload, pubKey)
-	return "1234";
-end
-
---Verifies a digital signature
-function VerifyPayloadSignature(signedPayloadPacket, pubKey)
-	local payload = signedPayloadPacket["payload"];
-	local signature = signedPayloadPacket["signature"];
-
-	return GenerateSignature(payload, pubKey) == signature;
-end
+os.loadAPI("cryptography");
 
 --Checks if this computer already has compunet installed and what version it is
 --returns 0 for no install, otherwise returns a version number
@@ -81,7 +77,7 @@ function CompunetTerminalVersion()
 
 	local signedVersionTable = textutils.unserialize(versionText);
 
-	if not VerifyPayloadSignature(signedVersionTable, publicKey) then
+	if not cryptography.VerifyTableSignature(signedVersionTable, publicKey) then
 		if advancedInstaller then
 			SetTextColor(colors.purple);
 			print("Installed Version Failed Signature Check!");
