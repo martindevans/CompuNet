@@ -96,20 +96,30 @@ function LoadPublicKey()
 	local keyhandle = fs.open("compunet.publickey", "r");
 	local publicKey = keyhandle.readAll();
 	keyhandle.close();
-	return publicKeyl
+	return publicKey;
 end
 
 local publicKey = "";
 local components = {};
 function Boot()
+    print("Loading OS Verification Key");
+    publicKey = LoadPublicKey();
+
     os.loadAPI("cryptography");
+    
+    print("Loading OS components from boot manifest");
+    components = LoadComponents(publicKey);
 
-	print("Loading OS Verification Key");
-	publicKey = LoadPublicKey();
-
-	print("Loading OS components from boot manifest");
-	components = LoadComponents(publicKey);
-
-	print("Connecting To Hardware peripherals");
-	SetupPeripherals(components);
+    print("Connecting To Hardware peripherals");
+    SetupPeripherals(components);
+    
+    print("Creating Shell");
+    scheduler.Start("Super Shell", sshell.Run, term);
+    
+    print("Starting Co-operative Process Scheduler");
+    scheduler.Run();
+    
+    print("Scheduler exited, shutting down");
+    os.sleep(10);
+    os.shutdown();
 end

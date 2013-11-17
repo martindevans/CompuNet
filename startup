@@ -21,22 +21,25 @@ local manifest = {
         { Path = "cryptography",            Comment = "Cryptography Functions", BootExclude = true, Unsigned = true },
     
         --OS Core
-        { Path = "scheduler.lua",           Comment = "Process Scheduler", BootExclude = false, Unsigned = false },
         { Path = "compunet_core.lua",		Comment = "Core Operating System", Rename = "compunet_core", BootExclude = true, Unsigned = false },
+        { Path = "terminalBuffer.lua",      Comment = "Terminal Buffer Redirect", Rename = "terminalBuffer", Unsigned = false },
+        { Path = "scheduler.lua",           Comment = "Process Scheduler", Rename = "scheduler", Unsigned = false },
+        { Path = "startup.lua",	            Comment = "Bootscript",	Rename = "startup", BootExclude = true },
         
         --OS applications/device drivers
+        { Path = "sshell.lua",	            Comment = "Super Shell", Rename = "sshell", Unsigned = false },
 		{ Path = "compunet_networking.lua",	Comment = "Basic networking functions", Rename = "compunet_networking", Unsigned = false },
 		--{ Path = "compunet_dns_client.lua",	Comment = "DNS client" },
 		--{ Path = "compunet_users.lua",		Comment = "Login/user management" },
-		--{ Path = "compunet_fs_client.lua",	Comment = "Distributed versioning filesystem" },
+		{ Path = "compunet_fs.lua",	        Comment = "filesystem management", Rename = "compunet_fs", Unsigned = false },
 		--{ Path = "compunet_servicebus.lua",	Comment = "Service publishing and discovery" },
 	},
 
 	User = {
+        { Path = "user/compunet_fs_client.lua",  Comment = "Distributed Versioning Filesystem", Rename = "compunet_fs_client", Unsigned = false },
 		--{ Path = "compunet_mail.lua", 	Comment = "Electronic Mail" },
 		--{ Path = "compunet_chat.lua", 	Comment = "Live Chat" },
 		--{ Path = "compunet_forum.lua", 	Comment = "Electronic Message Board" },
-		{ Path = "startup_user.lua",	Comment = "Bootscript for user terminal",	Rename = "startup", BootExclude = true },
 	},
 
 	NetworkServer = {
@@ -45,7 +48,6 @@ local manifest = {
 		--"compunet_dns_server.lua",		--DNS server
 		--"compunet_fs_server.lua",			--Distributed versioning filesystem server
 		--{ Path = "compunet_mail_server.lua",	Comment = "Electronic Mail Server" },
-		{ Path = "startup_server.lua",			Comment = "Bootscript for server",	Rename = "startup", BootExclude = true },
 	}
 };
 
