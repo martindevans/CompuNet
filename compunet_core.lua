@@ -114,8 +114,8 @@ function Boot()
     SetupPeripherals(components);
     
     print("Creating Shell");
-    scheduler.Start("Super Shell", sshell.Run, term);
-    
+    scheduler.Start("Super Shell", sshell.Run);
+
     print("Starting Co-operative Process Scheduler");
     scheduler.Run();
     

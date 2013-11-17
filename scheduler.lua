@@ -4,11 +4,11 @@
 local currentProcess = nil;
 local processes = {};
 
-function Start(name, func, output)
+function Start(name, func, redirectOutput)
     local process = {
         name = name,
         co = coroutine.create(func),
-        output = output,
+        output = redirectOutput or terminalBuffer.CreateRedirectBuffer(51, 19),
         parent = currentProcess
     }
     processes[process] = true;
@@ -37,8 +37,6 @@ end
 function Run()
     local count = 1;
     while count > 0 do
-        print(tostring(count));
-    
         count = 0;
         
         local deadProcesses = {};
@@ -53,9 +51,10 @@ function Run()
                 currentProcess = p;
                 os.queueEvent("process_resumed", p.name);
                 
-                --if p.output then
-                --    term.redirect(p.output);
-                --end
+                if p.output then
+                    term.redirect(p.output);
+                    p.output.makeActive(1, 1);
+                end
                 coroutine.resume(p.co);
                 
                 os.queueEvent("process_suspended", p.name);
@@ -68,6 +67,6 @@ function Run()
             processes[p] = nil;
         end
         
-        print("Exit: " .. tostring(count));
+        coroutine.yield();
     end
 end
