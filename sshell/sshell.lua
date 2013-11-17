@@ -1,3 +1,8 @@
+local path = "";
+function SetDirectory(directoryPath)
+    path = directoryPath;
+end
+
 --Capture "sections", a section is space separated, or delimited by quotes (" or ')
 local function SplitSections(str)
     local words = {};

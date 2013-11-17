@@ -27,7 +27,7 @@ local manifest = {
         { Path = "startup.lua",	            Comment = "Bootscript",	Rename = "startup", BootExclude = true },
         
         --OS applications/device drivers
-        { Path = "sshell.lua",	            Comment = "Super Shell", Rename = "sshell", Unsigned = false },
+        { Path = "sshell/sshell.lua",	    Comment = "Super Shell", Rename = "sshell", Unsigned = false },
 		{ Path = "compunet_networking.lua",	Comment = "Basic networking functions", Rename = "compunet_networking", Unsigned = false },
 		--{ Path = "compunet_dns_client.lua",	Comment = "DNS client" },
 		--{ Path = "compunet_users.lua",		Comment = "Login/user management" },
