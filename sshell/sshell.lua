@@ -1,6 +1,6 @@
-local path = "";
-function SetDirectory(directoryPath)
-    path = directoryPath;
+local currentPath = "";
+function setPath(path)
+    currentPath = path;
 end
 
 --Capture "sections", a section is space separated, or delimited by quotes (" or ')
@@ -42,7 +42,35 @@ local function ProcessInput(input)
     --Find a program at path words[1]
     --Execute program with args words[2] -> words[#words]
     
-    print(words[1]);
+    local searchPaths = {
+        fs.combine(currentPath, words[1]),  --Assume name is relative path to a program
+        words[1],                           --Assume name is a program in the root directory
+    };
+    
+    --Search user configured paths
+    --Either a absolute path, which the name will be appended to
+    --Or a relative path, which starts with a * and the name will be appended to and is relative to current working directory
+    if compunet_fs.exists("user") and compunet_fs.exists("user/sshell_search_paths") then
+        local file = compunet_fs.open("user/sshell_search_path", "r");
+        if file then
+            repeat
+                local line = manifestHandle.readLine();
+                if line then
+                    if line[0] == "+" then
+                        line = fs.combine(currentPath, line.sub(2));
+                    end
+                
+                    table.insert(searchPaths, fs.combine(line, words[1]));
+                end
+            until not line
+        
+            file.close();
+        end
+    end
+    
+    for _, p in ipairs(searchPaths) do
+        print(p);
+    end
 end
 
 function Run()

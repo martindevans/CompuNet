@@ -78,11 +78,13 @@ function LoadComponents(pubkey)
 	end
 
 	local manifestHandle = fs.open("__compunet.bootmanifest", "r");
-	local line = manifestHandle.readLine();
-	while line do
-		LoadComponent(line, pubkey, components);
-		line = manifestHandle.readLine();
-	end
+	
+    repeat
+        local line = manifestHandle.readLine()
+        if line then
+            LoadComponent(line, pubkey, components);
+        end
+    until not line
 
 	manifestHandle.close();
 
@@ -114,7 +116,9 @@ function Boot()
     SetupPeripherals(components);
     
     goroutine.run(function()
-        sshell.Run();
+        local status, err = pcall(sshell.Run);
+        print("sshell exited: " .. tostring(status));
+        print("sshell error: " .. tostring(err));
     end)
     
     print("Scheduler exited, shutting down");

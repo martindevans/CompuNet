@@ -132,29 +132,60 @@ local function SplitPath(path)
     return parts;
 end
 
-function list(path)
+local function GetPathAndMountAndError(path)
     local parts = SplitPath(path);
     
     if #parts == 0 then
-        local m = {};
-        for n,_ in pairs(mounts) do
-            table.insert(m, n);
-        end;
-        return m;
+        return parts, nil, "root";
     end
     
     local mountName = parts[1];
+    table.remove(parts, 1);
+    
     local mount = mounts[mountName];
     if not mount then
-        return;
+        return parts, nil, "not found";
     end
     
     if not mount:isAlive() then
-        return;
+        return parts, nil, "not alive";
+    end
+end
+
+function list(path)
+    local parts, mount, status = GetPathAndMountAndError(path);
+    
+    if not mount then
+        if status == "root" then
+            local m = {};
+            for n,_ in pairs(mounts) do
+                table.insert(m, n);
+            end;
+            return m;
+        else
+            return nil;
+        end
+    end
+
+    return mount:list(table.concat(parts, "/"));
+end
+
+function exists(path)
+    local parts, mount, status = GetPathAndMountAndError(path);
+    
+    if not mount then
+        if status == "root" then
+            return mounts[parts[1]] ~= nil;
+        else
+            return false;
+        end
     end
     
-    table.remove(parts, 1);
-    return mount:list(table.concat(parts, "/"));
+    return mount.exists(table.concat(parts, "/"));
+end
+
+function isDir(path)
+
 end
 
 --Create driver for any attached floppy drives
@@ -162,4 +193,4 @@ local driveDriver = CreateDriveDriver();
 compunet_core.RegisterDriver("drive", driveDriver);
 
 --Mount the local machine as sys
-Mount("hdd", CreateFilesystemMount("/"));
+Mount("hdd", CreateFileSystemMount("/"));
