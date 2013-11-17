@@ -113,11 +113,9 @@ function Boot()
     print("Connecting To Hardware peripherals");
     SetupPeripherals(components);
     
-    print("Creating Shell");
-    scheduler.Start("Super Shell", sshell.Run);
-
-    print("Starting Co-operative Process Scheduler");
-    scheduler.Run();
+    goroutine.run(function()
+        sshell.Run();
+    end)
     
     print("Scheduler exited, shutting down");
     os.sleep(10);

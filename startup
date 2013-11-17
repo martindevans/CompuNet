@@ -23,7 +23,7 @@ local manifest = {
         --OS Core
         { Path = "compunet_core.lua",		Comment = "Core Operating System", Rename = "compunet_core", BootExclude = true, Unsigned = false },
         { Path = "terminalBuffer.lua",      Comment = "Terminal Buffer Redirect", Rename = "terminalBuffer", Unsigned = false },
-        { Path = "scheduler.lua",           Comment = "Process Scheduler", Rename = "scheduler", Unsigned = false },
+        { Path = "goroutine.lua",           Comment = "Process Scheduler", Rename = "goroutine", Unsigned = false },
         { Path = "startup.lua",	            Comment = "Bootscript",	Rename = "startup", BootExclude = true },
         
         --OS applications/device drivers
