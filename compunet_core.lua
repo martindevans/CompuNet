@@ -108,15 +108,15 @@ function Boot()
     publicKey = LoadPublicKey();
 
     os.loadAPI("cryptography");
-    
+
     print("Loading OS components from boot manifest");
     components = LoadComponents(publicKey);
 
     print("Connecting To Hardware peripherals");
     SetupPeripherals(components);
-    
+
     goroutine.run(function()
-        local status, err = pcall(sshell.Run);
+        local status, err = pcall(shell.Run);
         print("sshell exited: " .. tostring(status));
         print("sshell error: " .. tostring(err));
     end)

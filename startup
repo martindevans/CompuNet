@@ -34,8 +34,8 @@ local manifest = {
 		--{ Path = "compunet_servicebus.lua",	Comment = "Service publishing and discovery" },
         
         --Shell
-        { Path = "sshell/sshell.lua",	    Comment = "Super Shell", Rename = "sshell", Unsigned = false },
-        { Path = "sshell/ls.lua",           Comment = "Directory Listing", Rename = "ls", Unsigned = true },
+        { Path = "sshell/sshell.lua",	    Comment = "Super Shell", Rename = "shell", Unsigned = false },
+        { Path = "sshell/test.lua",           Comment = "Directory Listing", Rename = "test", Unsigned = true, BootExclude = true },
 	},
 
 	User = {
