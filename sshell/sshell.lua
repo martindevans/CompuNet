@@ -42,9 +42,10 @@ local function ProcessInput(input)
     --Find a program at path words[1]
     --Execute program with args words[2] -> words[#words]
     
+    --In the future these paths could be loaded from disk, opening the possibility for user configuration of environment paths
     local searchPaths = {
         fs.combine(currentPath, words[1]),  --Assume name is relative path to a program
-        words[1],                           --Assume name is a program in the root directory
+        fs.combine("hdd", words[1]),        --Assume name is a program in the root system directory
     };
     
     --Search user configured paths
@@ -68,8 +69,29 @@ local function ProcessInput(input)
         end
     end
     
+    local matches = {};
     for _, p in ipairs(searchPaths) do
-        print(p);
+        if compunet_fs.exists(p) then
+            table.insert(matches, p);
+        end
+    end
+    
+    if #matches == 0 then
+        print("Program \"" .. tostring(words[1]) .. "\" not found");
+    else
+        local program = matches[1];
+        
+        --Open file and Read entire file as string
+        local handle = compunet_fs.open(program, "r");
+        local programSource = handle.readAll();
+        handle.close();
+        
+        local func, err = loadstring(programSource);
+        if not func then
+            print("Program loading error: " .. err);
+        else
+            func();
+        end
     end
 end
 

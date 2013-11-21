@@ -35,6 +35,7 @@ local manifest = {
         
         --Shell
         { Path = "sshell/sshell.lua",	    Comment = "Super Shell", Rename = "sshell", Unsigned = false },
+        { Path = "sshell/ls.lua",           Comment = "Directory Listing", Rename = "ls", Unsigned = true },
 	},
 
 	User = {

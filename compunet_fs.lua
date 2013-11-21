@@ -150,6 +150,8 @@ local function GetPathAndMountAndError(path)
     if not mount:isAlive() then
         return parts, nil, "not alive";
     end
+    
+    return parts, mount, "ok";
 end
 
 function list(path)
@@ -163,10 +165,10 @@ function list(path)
             end;
             return m;
         else
-            return nil;
+            return nil, status;
         end
     end
-
+    
     return mount:list(table.concat(parts, "/"));
 end
 
@@ -181,11 +183,69 @@ function exists(path)
         end
     end
     
-    return mount.exists(table.concat(parts, "/"));
+    return mount:exists(table.concat(parts, "/"));
 end
 
 function isDir(path)
+    error("Not Implemented");
+end
 
+function isReadOnly(path)
+    error("Not Implemented");
+end
+
+function getName(path)
+    return fs.getName(path);
+end
+
+function getDrive(path)
+    error("Not Implemented");
+end
+
+function getSize(path)
+    error("Not Implemented");
+end
+
+function getFreeSpace(path)
+    error("Not Implemented");
+end
+
+function makeDir(path)
+    error("Not Implemented");
+end
+
+function move(pathFrom, pathTo)
+    error("Not Implemented");
+end
+
+function copy(pathFrom, pathTo)
+    error("Not Implemented");
+end
+
+function delete(path)
+    error("Not Implemented");
+end
+
+function combine(basePath, localPath)
+    return fs.combine(basePath, localPath);
+end
+
+function open(path, mode)
+    local parts, mount, status = GetPathAndMountAndError(path);
+    
+    if not mount then
+        if status == "root" then
+            local m = {};
+            for n,_ in pairs(mounts) do
+                table.insert(m, n);
+            end;
+            return m;
+        else
+            return nil, status;
+        end
+    end
+    
+    return mount:open(table.concat(parts, "/"), mode);
 end
 
 --Create driver for any attached floppy drives
