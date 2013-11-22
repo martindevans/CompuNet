@@ -68,6 +68,11 @@ function LoadComponent(filename, pubkey, components)
 	end
 
 	table.insert(components, filename);
+    
+    local post = _G[filename]["PostComponentLoad"];
+    if post and type(post) == "function" then
+        post();
+    end
 end
 
 function LoadComponents(pubkey)
@@ -115,6 +120,10 @@ function Boot()
     print("Connecting To Hardware peripherals");
     SetupPeripherals(components);
 
+    if compunet_fs then
+        compunet_fs.ReplaceFs();
+    end
+    
     goroutine.run(function()
         local status, err = pcall(shell.Run);
         print("sshell exited: " .. tostring(status));

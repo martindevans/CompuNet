@@ -22,7 +22,7 @@ function path()
 end
 
 function resolve(localpath)
-    fs.combine(currentWorkingDirectory, localpath);
+    return fs.combine(currentWorkingDirectory, localpath);
 end
 
 function searchPaths()
@@ -84,13 +84,18 @@ end
 
 function run(program, arguments)
     --Args are either an array of args (take that straight) or a string (split that up)
-    local words = {};
-    if (type(arguments) == "table") then
-        words = arguments;
-    elseif (type(arguments == "string")) then
-        words = SplitSections(arguments);
+    if (type(arguments == "string")) then
+        print("Args: " .. arguments);
+        arguments = SplitSections(arguments);
+        
+        for _,v in pairs(arguments) do
+            print(" ->" .. v);
+        end
+        
+        runWithArgs(arguments);
     else
         print("Arguments must be a string!");
+        return;
     end
     
     --Open file and Read entire file as string
@@ -103,6 +108,20 @@ function run(program, arguments)
         print("Program loading error: " .. err);
     else
         func(unpack(words));
+    end
+end
+
+function runWithArgs(program, argsArray)
+    --Open file and Read entire file as string
+    local handle = compunet_fs.open(program, "r");
+    local programSource = handle.readAll();
+    handle.close();
+    
+    local func, err = loadstring(programSource);
+    if not func then
+        print("Program loading error: " .. err);
+    else
+        func(unpack(argsArray));
     end
 end
 
@@ -155,7 +174,7 @@ local function ProcessInput(input)
         print("Program \"" .. tostring(words[1]) .. "\" not found");
     else
         table.remove(words, 1);
-        run(program, words);
+        runWithArgs(program, words);
     end
 end
 

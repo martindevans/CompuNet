@@ -1,54 +1,56 @@
+local _fs = fs;
+
 local function CreateFileSystemMount(root)
     return {
         Root = root,
         
         isAlive = function(mount)
-            return fs.exists(mount.Root);
+            return _fs.exists(mount.Root);
         end,
         
         list = function(mount, path)
-            return fs.list(fs.combine(mount.Root, path));
+            return _fs.list(_fs.combine(mount.Root, path));
         end,
         
         exists = function(mount, path)
-            return fs.exists(fs.combine(mount.Root, path));
+            return _fs.exists(_fs.combine(mount.Root, path));
         end,
         
         isDir = function(mount, path)
-            return fs.isDir(fs.combine(mount.Root, path));
+            return _fs.isDir(_fs.combine(mount.Root, path));
         end,
         
         isReadOnly = function(mount, path)
-            return fs.isReadOnly(fs.combine(mount.Root, path));
+            return _fs.isReadOnly(_fs.combine(mount.Root, path));
         end,
         
         getSize = function(mount, path)
-            return fs.getSize(fs.combine(mount.Root, path));
+            return _fs.getSize(_fs.combine(mount.Root, path));
         end,
         
         getFreeSpace = function(mount, path)
-            return fs.getFreeSpace(fs.combine(mount.Root, path));
+            return _fs.getFreeSpace(_fs.combine(mount.Root, path));
         end,
         
         makeDir = function(mount, path)
-            return fs.makeDir(fs.combine(mount.Root, path));
+            return _fs.makeDir(_fs.combine(mount.Root, path));
         end,
         
         delete = function(mount, path)
-            return fs.delete(fs.combine(mount.Root, path));
+            return _fs.delete(_fs.combine(mount.Root, path));
         end,
         
         open = function(mount, path, mode)
-            return fs.open(fs.combine(mount.Root, path), mode);
+            return _fs.open(_fs.combine(mount.Root, path), mode);
         end,
     }
 end
 
 local function CreateDriveMount(drive)
-    local fsMount = CreateFileSystemMount(drive.getMountPath());
+    local _fsMount = CreateFileSystemMount(drive.getMountPath());
     
-    local updateFsMount = function()
-        fsMount.Root = drive.getMountPath();
+    local update_fsMount = function()
+        _fsMount.Root = drive.getMountPath();
     end
     
     return {
@@ -57,48 +59,48 @@ local function CreateDriveMount(drive)
         end,
         
         list = function(mount, path)
-            updateFsMount();
-            return fsMount:list(path);
+            update_fsMount();
+            return _fsMount:list(path);
         end,
         
         exists = function(mount, path)
-            updateFsMount();
-            return fsMount:exists(path);
+            update_fsMount();
+            return _fsMount:exists(path);
         end,
         
         isDir = function(mount, path)
-            updateFsMount();
-            return fsMount:isDir(path);
+            update_fsMount();
+            return _fsMount:isDir(path);
         end,
         
         isReadOnly = function(mount, path)
-            updateFsMount();
-            return fsMount:isReadOnly(path);
+            update_fsMount();
+            return _fsMount:isReadOnly(path);
         end,
         
         getSize = function(mount, path)
-            updateFsMount();
-            return fsMount:getSize(path);
+            update_fsMount();
+            return _fsMount:getSize(path);
         end,
         
         getFreeSpace = function(mount, path)
-            updateFsMount();
-            return fsMount:getFreeSpace(path);
+            update_fsMount();
+            return _fsMount:getFreeSpace(path);
         end,
         
         makeDir = function(mount, path)
-            updateFsMount();
-            return fsMount:makeDir(path);
+            update_fsMount();
+            return _fsMount:makeDir(path);
         end,
         
         delete = function(mount, path)
-            updateFsMount();
-            return fsMount:delete(path);
+            update_fsMount();
+            return _fsMount:delete(path);
         end,
         
         open = function(mount, path, mode)
-            updateFsMount();
-            return fsMount.open(path, mode);
+            update_fsMount();
+            return _fsMount.open(path, mode);
         end,
     }
 end
@@ -187,7 +189,17 @@ function exists(path)
 end
 
 function isDir(path)
-    error("Not Implemented");
+    local parts, mount, status = GetPathAndMountAndError(path);
+    
+    if not mount then
+        if status == "root" then
+            return true;
+        else
+            return false;
+        end
+    end
+    
+    return mount:isDir(table.concat(parts, "/"));
 end
 
 function isReadOnly(path)
@@ -195,7 +207,7 @@ function isReadOnly(path)
 end
 
 function getName(path)
-    return fs.getName(path);
+    return _fs.getName(path);
 end
 
 function getDrive(path)
@@ -227,7 +239,7 @@ function delete(path)
 end
 
 function combine(basePath, localPath)
-    return fs.combine(basePath, localPath);
+    return _fs.combine(basePath, localPath);
 end
 
 function open(path, mode)
@@ -254,3 +266,7 @@ compunet_core.RegisterDriver("drive", driveDriver);
 
 --Mount the local machine as sys
 Mount("hdd", CreateFileSystemMount("/"));
+
+function ReplaceFs()
+    _G["fs"] = compunet_fs;
+end
